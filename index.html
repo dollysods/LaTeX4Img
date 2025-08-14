@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX OCR - Image to LaTeX Converter</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LaTeX OCR</h1>
+            <p>Convert images of mathematical equations to LaTeX code</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-content">
+                        <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                            <circle cx="12" cy="13" r="3"/>
+                        </svg>
+                        <p>Drop an image here or click to upload</p>
+                        <p class="file-info">Supports PNG, JPG, JPEG, GIF</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <h3>Uploaded Image:</h3>
+                <img id="imagePreview" alt="Uploaded image">
+                <button id="processBtn" class="btn btn-primary">Convert to LaTeX</button>
+            </div>
+
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Processing image...</p>
+            </div>
+
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h3>LaTeX Code:</h3>
+                <div class="output-container">
+                    <textarea id="latexOutput" readonly></textarea>
+                    <button id="copyBtn" class="btn btn-secondary">Copy LaTeX</button>
+                </div>
+                
+                <h3>Preview:</h3>
+                <div class="math-preview" id="mathPreview"></div>
+                
+                <button id="newImageBtn" class="btn btn-primary">Process Another Image</button>
+            </div>
+
+            <div class="info-section">
+                <h3>Tips for Better Results:</h3>
+                <ul>
+                    <li>Use high-contrast images with clear, dark text on light background</li>
+                    <li>Ensure the equation is well-lit and not blurry</li>
+                    <li>Crop the image to focus on the equation</li>
+                    <li>For handwritten equations, use clear, separated characters</li>
+                </ul>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built with <a href="https://tesseract.projectnaptha.com/" target="_blank">Tesseract.js</a> | 
+               <a href="https://github.com" target="_blank">View on GitHub</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

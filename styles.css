@@ -1,0 +1,348 @@
+:root {
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary-color: #64748b;
+    --background-color: #f8fafc;
+    --surface-color: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--background-color);
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 40px 0;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+main {
+    display: grid;
+    gap: 30px;
+}
+
+.upload-section {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 2px dashed var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.drop-zone {
+    text-align: center;
+    padding: 40px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.drop-zone:hover {
+    background-color: var(--background-color);
+    border-color: var(--primary-color);
+}
+
+.drop-zone.drag-over {
+    background-color: #eff6ff;
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+.drop-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.upload-icon {
+    color: var(--primary-color);
+    opacity: 0.6;
+}
+
+.drop-content p {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.file-info {
+    font-size: 0.9rem !important;
+    color: var(--text-secondary) !important;
+    font-weight: 400 !important;
+}
+
+.preview-section {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.preview-section h3 {
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+#imagePreview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.progress-section {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+#progressText {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.result-section {
+    background: var(--surface-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.result-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+.output-container {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+#latexOutput {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    background-color: #f8fafc;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+#latexOutput:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.math-preview {
+    background-color: #f8fafc;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 80px;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin: 5px;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #475569;
+}
+
+.info-section {
+    background: var(--surface-color);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary-color);
+}
+
+.info-section h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+}
+
+.info-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.info-section li {
+    padding: 8px 0;
+    padding-left: 20px;
+    position: relative;
+    color: var(--text-secondary);
+}
+
+.info-section li:before {
+    content: "💡";
+    position: absolute;
+    left: 0;
+}
+
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header {
+        padding: 30px 20px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .upload-section,
+    .preview-section,
+    .progress-section,
+    .result-section,
+    .info-section {
+        padding: 20px;
+    }
+    
+    .drop-zone {
+        padding: 30px 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #0f172a;
+        --surface-color: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+    
+    #latexOutput,
+    .math-preview {
+        background-color: #0f172a;
+        color: var(--text-primary);
+    }
+}
