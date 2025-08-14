@@ -56,6 +56,12 @@ class LaTeXOCR {
             },
             options: {
                 skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is ready!');
+                    MathJax.startup.defaultReady();
+                }
             }
         };
     }
@@ -87,6 +93,9 @@ class LaTeXOCR {
             return;
         }
 
+        // Store the original file for API calls
+        this.currentFile = file;
+
         const reader = new FileReader();
         reader.onload = (e) => {
             this.imagePreview.src = e.target.result;
@@ -105,17 +114,23 @@ class LaTeXOCR {
             this.processBtn.disabled = true;
             this.setupSection.style.display = 'none';
             
-            const response = await fetch(`${serverUrl}/health`, {
-                method: 'GET',
-                timeout: 5000
+            console.log('Checking server at:', serverUrl);
+            
+            // Remove timeout option as fetch doesn't support it directly
+            const response = await fetch(`${serverUrl}/`, {
+                method: 'GET'
             });
             
+            console.log('Response status:', response.status, 'OK:', response.ok);
+            
             if (response.ok) {
+                const data = await response.json();
+                console.log('Server response:', data);
                 this.serverStatus.innerHTML = '✅ pix2tex server is ready!';
                 this.processBtn.disabled = false;
                 this.serverConfig.style.display = 'none';
             } else {
-                throw new Error('Server not responding correctly');
+                throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
             }
         } catch (error) {
             this.serverStatus.innerHTML = '❌ pix2tex server not available';
@@ -128,7 +143,7 @@ class LaTeXOCR {
     }
 
     async processImage() {
-        if (!this.imagePreview.src) {
+        if (!this.currentFile) {
             alert('Please upload an image first.');
             return;
         }
@@ -139,28 +154,24 @@ class LaTeXOCR {
         this.progressText.textContent = 'Processing image with pix2tex AI...';
 
         try {
-            // Convert image to base64 without data URL prefix
-            const base64Image = this.imagePreview.src.split(',')[1];
+            // Create FormData to send as multipart/form-data
+            const formData = new FormData();
+            formData.append('file', this.currentFile);
             
-            const response = await fetch(`${serverUrl}/predict`, {
+            const apiResponse = await fetch(`${serverUrl}/predict/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    image: base64Image
-                })
+                body: formData
             });
 
-            if (!response.ok) {
-                throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+            if (!apiResponse.ok) {
+                throw new Error(`Server responded with ${apiResponse.status}: ${apiResponse.statusText}`);
             }
 
-            const result = await response.json();
+            const latex = await apiResponse.json();
             
-            if (result.latex || result.prediction) {
-                const latex = result.latex || result.prediction;
-                this.displayResult(latex, 'Processed with pix2tex AI');
+            if (latex && typeof latex === 'string') {
+                // Don't show raw text section since API only returns the LaTeX string
+                this.displayResult(latex, null);
             } else {
                 throw new Error('No LaTeX result from pix2tex server');
             }
@@ -231,6 +242,9 @@ Or use the setup_pix2tex.bat file for automatic setup!`;
                 rawTextElement.textContent = rawText;
                 this.rawTextSection.style.display = 'block';
             }
+        } else {
+            // Hide raw text section if no meaningful raw text
+            this.rawTextSection.style.display = 'none';
         }
         
         this.updatePreview();
@@ -238,13 +252,33 @@ Or use the setup_pix2tex.bat file for automatic setup!`;
 
     updatePreview() {
         const latex = this.latexOutput.value;
-        this.mathPreview.textContent = latex;
         
-        if (window.MathJax) {
-            MathJax.typesetPromise([this.mathPreview]).catch((err) => {
-                console.log('MathJax rendering error:', err);
-                this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
-            });
+        // Clear previous content and set new LaTeX
+        this.mathPreview.innerHTML = `$$${latex}$$`;
+        
+        // Render with MathJax if available
+        if (window.MathJax && MathJax.typesetPromise) {
+            try {
+                MathJax.typesetPromise([this.mathPreview]).catch((err) => {
+                    console.log('MathJax rendering error:', err);
+                    this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
+                });
+            } catch (error) {
+                console.log('MathJax error:', error);
+                this.mathPreview.innerHTML = `<p>MathJax not ready. LaTeX code: <code>${latex}</code></p>`;
+            }
+        } else if (window.MathJax && MathJax.startup) {
+            // Wait for MathJax to be ready
+            window.setTimeout(() => {
+                if (MathJax.typesetPromise) {
+                    MathJax.typesetPromise([this.mathPreview]).catch((err) => {
+                        console.log('MathJax rendering error:', err);
+                    });
+                }
+            }, 100);
+        } else {
+            // Fallback if MathJax not loaded
+            this.mathPreview.innerHTML = `<p>Loading MathJax... LaTeX code: <code>${latex}</code></p>`;
         }
     }
 
@@ -285,6 +319,7 @@ Or use the setup_pix2tex.bat file for automatic setup!`;
         this.serverConfig.style.display = 'none';
         this.setupSection.style.display = 'block';
         this.fileInput.value = '';
+        this.currentFile = null;
         
         // Clear any progress intervals
         if (this.progressInterval) {

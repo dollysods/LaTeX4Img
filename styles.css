@@ -371,6 +371,7 @@ footer a:hover {
     border-radius: 8px;
     padding: 25px;
     margin-bottom: 20px;
+    color: var(--text-primary);
 }
 
 .setup-steps {
@@ -403,7 +404,7 @@ footer a:hover {
 
 .step-content h4 {
     margin-bottom: 8px;
-    color: var(--text-primary);
+    color: #1e293b;
 }
 
 .step-content code {
@@ -412,11 +413,12 @@ footer a:hover {
     border-radius: 4px;
     font-family: 'Courier New', monospace;
     font-size: 14px;
+    color: #1e293b;
 }
 
 .step-content p {
     margin: 0;
-    color: var(--text-secondary);
+    color: #64748b;
 }
 
 .api-input {
@@ -493,6 +495,35 @@ footer a:hover {
     #latexOutput,
     .math-preview {
         background-color: #0f172a;
+        color: var(--text-primary);
+    }
+    
+    .setup-section {
+        background: #374151;
+        border-color: #4b5563;
+        color: var(--text-primary);
+    }
+    
+    .raw-text-section {
+        background: #374151;
+        border-color: #4b5563;
+        color: var(--text-primary);
+    }
+    
+    .step {
+        background: var(--surface-color);
+    }
+    
+    .step-content h4 {
+        color: var(--text-primary);
+    }
+    
+    .step-content p {
+        color: var(--text-secondary);
+    }
+    
+    .step-content code {
+        background: #374151;
         color: var(--text-primary);
     }
 }
