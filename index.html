@@ -45,14 +45,34 @@
             </div>
 
             <div class="result-section" id="resultSection" style="display: none;">
+                <div class="raw-text-section" id="rawTextSection" style="display: none;">
+                    <h3>Raw OCR Text:</h3>
+                    <div class="raw-text-container">
+                        <textarea id="rawText" readonly></textarea>
+                        <p class="text-info">This is what the OCR detected. You can use this to manually correct the LaTeX below.</p>
+                    </div>
+                </div>
+                
                 <h3>LaTeX Code:</h3>
                 <div class="output-container">
-                    <textarea id="latexOutput" readonly></textarea>
-                    <button id="copyBtn" class="btn btn-secondary">Copy LaTeX</button>
+                    <textarea id="latexOutput"></textarea>
+                    <div class="button-group">
+                        <button id="copyBtn" class="btn btn-secondary">Copy LaTeX</button>
+                        <button id="updatePreviewBtn" class="btn btn-secondary">Update Preview</button>
+                        <button id="tryMathpixBtn" class="btn btn-primary">Try Mathpix API</button>
+                    </div>
                 </div>
                 
                 <h3>Preview:</h3>
                 <div class="math-preview" id="mathPreview"></div>
+                
+                <div class="mathpix-section" id="mathpixSection" style="display: none;">
+                    <h3>Mathpix API (Better Accuracy):</h3>
+                    <div class="api-input">
+                        <input type="text" id="mathpixApiKey" placeholder="Enter your Mathpix API key (optional)" />
+                        <p class="api-info">Get a free API key at <a href="https://mathpix.com/" target="_blank">mathpix.com</a> for better mathematical OCR accuracy.</p>
+                    </div>
+                </div>
                 
                 <button id="newImageBtn" class="btn btn-primary">Process Another Image</button>
             </div>

@@ -299,6 +299,76 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* New styles for enhanced interface */
+.raw-text-section {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.raw-text-container textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    background-color: #f8f9fa;
+    margin-bottom: 10px;
+    resize: vertical;
+}
+
+.text-info, .api-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.button-group .btn {
+    margin: 0;
+}
+
+#latexOutput {
+    resize: vertical;
+}
+
+.mathpix-section {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.api-input {
+    margin-bottom: 15px;
+}
+
+.api-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.api-input input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 15px;
