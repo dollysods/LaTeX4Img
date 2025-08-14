@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LaTeX OCR - Image to LaTeX Converter</title>
+    <title>LaTeX OCR - Image to LaTeX Converter (Powered by pix2tex)</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -13,7 +12,7 @@
     <div class="container">
         <header>
             <h1>LaTeX OCR</h1>
-            <p>Convert images of mathematical equations to LaTeX code</p>
+            <p>Convert images of mathematical equations to LaTeX code using pix2tex AI</p>
         </header>
 
         <main>
@@ -34,7 +33,10 @@
             <div class="preview-section" id="previewSection" style="display: none;">
                 <h3>Uploaded Image:</h3>
                 <img id="imagePreview" alt="Uploaded image">
-                <button id="processBtn" class="btn btn-primary">Convert to LaTeX</button>
+                <div class="server-status" id="serverStatus">
+                    <p>🔍 Checking pix2tex server status...</p>
+                </div>
+                <button id="processBtn" class="btn btn-primary" disabled>Convert to LaTeX</button>
             </div>
 
             <div class="progress-section" id="progressSection" style="display: none;">
@@ -59,51 +61,61 @@
                     <div class="button-group">
                         <button id="copyBtn" class="btn btn-secondary">Copy LaTeX</button>
                         <button id="updatePreviewBtn" class="btn btn-secondary">Update Preview</button>
-                        <button id="tryPix2texBtn" class="btn btn-primary">Try pix2tex (Better OCR)</button>
-                        <button id="tryMathpixBtn" class="btn btn-secondary">Try Mathpix API</button>
                     </div>
                 </div>
                 
                 <h3>Preview:</h3>
                 <div class="math-preview" id="mathPreview"></div>
                 
-                <div class="pix2tex-section" id="pix2texSection" style="display: none;">
-                    <h3>pix2tex API (Free, Better Accuracy):</h3>
+                <div class="server-config" id="serverConfig">
+                    <h3>pix2tex Server Configuration:</h3>
                     <div class="api-input">
-                        <input type="text" id="pix2texUrl" placeholder="pix2tex server URL (e.g., http://localhost:8502)" value="http://localhost:8502" />
-                        <p class="api-info">
-                            <strong>Setup Instructions:</strong><br>
-                            1. Install: <code>pip install "pix2tex[gui]"</code><br>
-                            2. Run server: <code>python -m pix2tex.api.run</code><br>
-                            3. Click the button above to use the better OCR!
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mathpix-section" id="mathpixSection" style="display: none;">
-                    <h3>Mathpix API (Premium):</h3>
-                    <div class="api-input">
-                        <input type="text" id="mathpixApiKey" placeholder="Enter your Mathpix API key (optional)" />
-                        <p class="api-info">Get a paid API key at <a href="https://mathpix.com/" target="_blank">mathpix.com</a> for premium mathematical OCR accuracy.</p>
+                        <input type="text" id="pix2texUrl" placeholder="pix2tex server URL" value="http://localhost:8502" />
+                        <button id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
                     </div>
                 </div>
                 
                 <button id="newImageBtn" class="btn btn-primary">Process Another Image</button>
             </div>
 
-            <div class="info-section">
+            <div class="setup-section" id="setupSection">
+                <h3>Setup pix2tex Server:</h3>
+                <div class="setup-steps">
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <div class="step-content">
+                            <h4>Install pix2tex</h4>
+                            <code>pip install "pix2tex[gui]"</code>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <div class="step-content">
+                            <h4>Start the server</h4>
+                            <code>python -m pix2tex.api.run</code>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <div class="step-content">
+                            <h4>Quick Setup (Windows)</h4>
+                            <p>Double-click <code>setup_pix2tex.bat</code> in this folder</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <h3>Tips for Better Results:</h3>
                 <ul>
                     <li>Use high-contrast images with clear, dark text on light background</li>
+                    <li>Crop the image to focus only on the mathematical equation</li>
                     <li>Ensure the equation is well-lit and not blurry</li>
-                    <li>Crop the image to focus on the equation</li>
-                    <li>For handwritten equations, use clear, separated characters</li>
+                    <li>pix2tex works best with printed equations, but handles handwritten ones too</li>
                 </ul>
             </div>
         </main>
 
         <footer>
-            <p>Built with <a href="https://tesseract.projectnaptha.com/" target="_blank">Tesseract.js</a> | 
+            <p>Powered by <a href="https://github.com/lukas-blecher/LaTeX-OCR" target="_blank">pix2tex (LaTeX-OCR)</a> | 
                <a href="https://github.com" target="_blank">View on GitHub</a></p>
         </footer>
     </div>

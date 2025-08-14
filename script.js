@@ -3,6 +3,7 @@ class LaTeXOCR {
         this.initializeElements();
         this.bindEvents();
         this.initializeMathJax();
+        this.checkServerStatus();
     }
 
     initializeElements() {
@@ -22,12 +23,11 @@ class LaTeXOCR {
         this.rawText = document.getElementById('rawText');
         this.rawTextSection = document.getElementById('rawTextSection');
         this.updatePreviewBtn = document.getElementById('updatePreviewBtn');
-        this.tryMathpixBtn = document.getElementById('tryMathpixBtn');
-        this.mathpixSection = document.getElementById('mathpixSection');
-        this.mathpixApiKey = document.getElementById('mathpixApiKey');
-        this.tryPix2texBtn = document.getElementById('tryPix2texBtn');
-        this.pix2texSection = document.getElementById('pix2texSection');
         this.pix2texUrl = document.getElementById('pix2texUrl');
+        this.serverStatus = document.getElementById('serverStatus');
+        this.testConnectionBtn = document.getElementById('testConnectionBtn');
+        this.serverConfig = document.getElementById('serverConfig');
+        this.setupSection = document.getElementById('setupSection');
     }
 
     bindEvents() {
@@ -39,11 +39,13 @@ class LaTeXOCR {
         this.copyBtn.addEventListener('click', this.copyToClipboard.bind(this));
         this.newImageBtn.addEventListener('click', this.resetInterface.bind(this));
         this.updatePreviewBtn.addEventListener('click', this.updatePreview.bind(this));
-        this.tryPix2texBtn.addEventListener('click', this.processWithPix2tex.bind(this));
-        this.tryMathpixBtn.addEventListener('click', this.toggleMathpixSection.bind(this));
+        this.testConnectionBtn.addEventListener('click', this.checkServerStatus.bind(this));
         
         // Allow editing of LaTeX output
         this.latexOutput.addEventListener('input', this.updatePreview.bind(this));
+        
+        // Auto-check server status when URL changes
+        this.pix2texUrl.addEventListener('change', this.checkServerStatus.bind(this));
     }
 
     initializeMathJax() {
@@ -90,291 +92,51 @@ class LaTeXOCR {
             this.imagePreview.src = e.target.result;
             this.previewSection.style.display = 'block';
             this.resultSection.style.display = 'none';
+            this.checkServerStatus(); // Check server when image is loaded
         };
         reader.readAsDataURL(file);
     }
 
-    async processImage() {
-        this.showProgress();
+    async checkServerStatus() {
+        const serverUrl = this.pix2texUrl.value.trim() || 'http://localhost:8502';
         
         try {
-            // Preprocess image for better OCR
-            const processedImage = await this.preprocessImage(this.imagePreview.src);
+            this.serverStatus.innerHTML = '🔄 Checking pix2tex server...';
+            this.processBtn.disabled = true;
+            this.setupSection.style.display = 'none';
             
-            const { data: { text } } = await Tesseract.recognize(
-                processedImage,
-                'eng',
-                {
-                    logger: m => this.updateProgress(m),
-                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz()[]{}=+-*/^_.,?:; '
-                }
-            );
-
-            const latexCode = this.convertToLaTeX(text);
-            this.displayResult(latexCode, text);
-        } catch (error) {
-            console.error('OCR Error:', error);
-            this.showError('Failed to process image. Please try again.');
-        }
-    }
-
-    async preprocessImage(imageSrc) {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
+            const response = await fetch(`${serverUrl}/health`, {
+                method: 'GET',
+                timeout: 5000
+            });
             
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                // Draw original image
-                ctx.drawImage(img, 0, 0);
-                
-                // Get image data for processing
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                
-                // Convert to grayscale and increase contrast
-                for (let i = 0; i < data.length; i += 4) {
-                    // Convert to grayscale
-                    const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                    
-                    // Increase contrast (threshold)
-                    const threshold = 128;
-                    const newValue = gray > threshold ? 255 : 0;
-                    
-                    data[i] = newValue;     // Red
-                    data[i + 1] = newValue; // Green
-                    data[i + 2] = newValue; // Blue
-                    // Alpha stays the same
-                }
-                
-                // Put processed image data back
-                ctx.putImageData(imageData, 0, 0);
-                
-                // Scale up for better OCR
-                const scaledCanvas = document.createElement('canvas');
-                const scaledCtx = scaledCanvas.getContext('2d');
-                scaledCanvas.width = canvas.width * 2;
-                scaledCanvas.height = canvas.height * 2;
-                
-                scaledCtx.imageSmoothingEnabled = false;
-                scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-                
-                resolve(scaledCanvas.toDataURL());
-            };
-            
-            img.src = imageSrc;
-        });
-    }
-
-    convertToLaTeX(text) {
-        let latex = text.trim();
-        
-        // First, preserve and normalize line breaks for structure
-        latex = latex.replace(/\r\n/g, '\n');
-        latex = latex.replace(/\r/g, '\n');
-        
-        // Common OCR mistakes and corrections
-        const ocrCorrections = [
-            // Number corrections
-            [/1f/g, 'If'],
-            [/0/g, 'O'], // Sometimes O is recognized as 0
-            [/5/g, 'S'], // Sometimes S is recognized as 5
-            [/1/g, 'I'], // Sometimes I is recognized as 1
-            [/%/g, 'p'], // % often misread as p
-            [/\bf/g, 'f'], // Bold formatting artifacts
-            [/\bs/g, 's'], // Bold formatting artifacts
-        ];
-        
-        // Apply OCR corrections first
-        ocrCorrections.forEach(([pattern, replacement]) => {
-            latex = latex.replace(pattern, replacement);
-        });
-        
-        // Clean up whitespace but preserve structure
-        latex = latex.replace(/\s+/g, ' ');
-        
-        // Enhanced mathematical symbol replacements
-        const replacements = [
-            // Functions
-            [/\bsum\b/gi, '\\sum'],
-            [/\bint\b/gi, '\\int'],
-            [/\blim\b/gi, '\\lim'],
-            [/\bsin\b/gi, '\\sin'],
-            [/\bcos\b/gi, '\\cos'],
-            [/\btan\b/gi, '\\tan'],
-            [/\bln\b/gi, '\\ln'],
-            [/\blog\b/gi, '\\log'],
-            [/\bsqrt\b/gi, '\\sqrt'],
-            
-            // Greek letters
-            [/\balpha\b/gi, '\\alpha'],
-            [/\bbeta\b/gi, '\\beta'],
-            [/\bgamma\b/gi, '\\gamma'],
-            [/\bdelta\b/gi, '\\delta'],
-            [/\bepsilon\b/gi, '\\epsilon'],
-            [/\btheta\b/gi, '\\theta'],
-            [/\blambda\b/gi, '\\lambda'],
-            [/\bmu\b/gi, '\\mu'],
-            [/\bpi\b/gi, '\\pi'],
-            [/\bsigma\b/gi, '\\sigma'],
-            [/\bphi\b/gi, '\\phi'],
-            [/\bomega\b/gi, '\\omega'],
-            
-            // Mathematical operators
-            [/≤/g, '\\leq'],
-            [/≥/g, '\\geq'],
-            [/≠/g, '\\neq'],
-            [/±/g, '\\pm'],
-            [/∞/g, '\\infty'],
-            [/∈/g, '\\in'],
-            [/∑/g, '\\sum'],
-            [/∫/g, '\\int'],
-            [/√/g, '\\sqrt'],
-            [/×/g, '\\times'],
-            [/÷/g, '\\div'],
-            
-            // Fraction detection (improved)
-            [/(\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}'],
-            [/(\w+)\s*\/\s*(\w+)/g, '\\frac{$1}{$2}'],
-            
-            // Superscript/subscript patterns
-            [/(\w+)\^(\d+)/g, '$1^{$2}'],
-            [/(\w+)_(\w+)/g, '$1_{$2}'],
-            
-            // Multiple choice answers
-            [/\(A\)/g, '(A)'],
-            [/\(B\)/g, '(B)'],
-            [/\(C\)/g, '(C)'],
-            [/\(D\)/g, '(D)'],
-            [/\(E\)/g, '(E)'],
-        ];
-
-        replacements.forEach(([pattern, replacement]) => {
-            latex = latex.replace(pattern, replacement);
-        });
-        
-        // Handle multi-line mathematical expressions
-        if (latex.includes('\n') && (latex.includes('=') || latex.includes('\\frac'))) {
-            // Split into lines and process each
-            const lines = latex.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            latex = lines.join(' \\\\ ');
-        }
-
-        // Only wrap in math mode if it contains mathematical content
-        const hasMath = latex.includes('=') || latex.includes('\\') || latex.includes('^') || latex.includes('_') || latex.includes('\\frac');
-        
-        if (hasMath && !latex.startsWith('$')) {
-            // Use align environment for multi-line equations
-            if (latex.includes('\\\\')) {
-                latex = `\\begin{align}\n${latex}\n\\end{align}`;
+            if (response.ok) {
+                this.serverStatus.innerHTML = '✅ pix2tex server is ready!';
+                this.processBtn.disabled = false;
+                this.serverConfig.style.display = 'none';
             } else {
-                latex = `$$${latex}$$`;
+                throw new Error('Server not responding correctly');
             }
-        }
-
-        return latex;
-    }
-
-    updateProgress(m) {
-        const progress = m.progress * 100;
-        this.progressFill.style.width = `${progress}%`;
-        this.progressText.textContent = `${m.status}: ${Math.round(progress)}%`;
-    }
-
-    showProgress() {
-        this.previewSection.style.display = 'none';
-        this.progressSection.style.display = 'block';
-        this.resultSection.style.display = 'none';
-    }
-
-    displayResult(latex, rawText) {
-        this.progressSection.style.display = 'none';
-        this.resultSection.style.display = 'block';
-        
-        this.latexOutput.value = latex;
-        this.mathPreview.textContent = latex;
-        
-        // Show raw OCR text for debugging/manual correction
-        if (rawText && rawText.trim()) {
-            const rawTextElement = document.getElementById('rawText');
-            if (rawTextElement) {
-                rawTextElement.textContent = rawText;
-                document.getElementById('rawTextSection').style.display = 'block';
-            }
-        }
-        
-        // Re-render MathJax
-        if (window.MathJax) {
-            MathJax.typesetPromise([this.mathPreview]).catch((err) => {
-                console.log('MathJax rendering error:', err);
-                this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
-            });
+        } catch (error) {
+            this.serverStatus.innerHTML = '❌ pix2tex server not available';
+            this.processBtn.disabled = true;
+            this.serverConfig.style.display = 'block';
+            this.setupSection.style.display = 'block';
+            
+            console.error('Server check failed:', error);
         }
     }
 
-    showError(message) {
-        this.progressSection.style.display = 'none';
-        alert(message);
-    }
-
-    async copyToClipboard() {
-        try {
-            await navigator.clipboard.writeText(this.latexOutput.value);
-            const originalText = this.copyBtn.textContent;
-            this.copyBtn.textContent = 'Copied!';
-            setTimeout(() => {
-                this.copyBtn.textContent = originalText;
-            }, 2000);
-        } catch (err) {
-            console.error('Failed to copy:', err);
-            // Fallback for older browsers
-            this.latexOutput.select();
-            document.execCommand('copy');
-        }
-    }
-
-    resetInterface() {
-        this.previewSection.style.display = 'none';
-        this.progressSection.style.display = 'none';
-        this.resultSection.style.display = 'none';
-        this.rawTextSection.style.display = 'none';
-        this.pix2texSection.style.display = 'none';
-        this.mathpixSection.style.display = 'none';
-        this.fileInput.value = '';
-    }
-
-    updatePreview() {
-        const latex = this.latexOutput.value;
-        this.mathPreview.textContent = latex;
-        
-        if (window.MathJax) {
-            MathJax.typesetPromise([this.mathPreview]).catch((err) => {
-                console.log('MathJax rendering error:', err);
-                this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
-            });
-        }
-    }
-
-    async processWithPix2tex() {
+    async processImage() {
         if (!this.imagePreview.src) {
             alert('Please upload an image first.');
             return;
         }
 
-        // Toggle pix2tex section visibility
-        const isVisible = this.pix2texSection.style.display !== 'none';
-        this.pix2texSection.style.display = isVisible ? 'none' : 'block';
-        
-        if (isVisible) return; // Just hiding section, don't process
-
         const serverUrl = this.pix2texUrl.value.trim() || 'http://localhost:8502';
         
         this.showProgress();
-        this.progressText.textContent = 'Processing with pix2tex (better accuracy)...';
+        this.progressText.textContent = 'Processing image with pix2tex AI...';
 
         try {
             // Convert image to base64 without data URL prefix
@@ -398,86 +160,136 @@ class LaTeXOCR {
             
             if (result.latex || result.prediction) {
                 const latex = result.latex || result.prediction;
-                this.displayResult(latex, 'Processed with pix2tex');
+                this.displayResult(latex, 'Processed with pix2tex AI');
             } else {
                 throw new Error('No LaTeX result from pix2tex server');
             }
         } catch (error) {
             console.error('pix2tex API Error:', error);
-            let errorMsg = 'pix2tex server not available. ';
+            let errorMsg = 'Failed to process image with pix2tex. ';
             
             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                 errorMsg += `
-                
-Setup pix2tex server:
+
+Please make sure the pix2tex server is running:
+
 1. Install: pip install "pix2tex[gui]"
 2. Run: python -m pix2tex.api.run
 3. Server should start at http://localhost:8502
 
-Then try again!`;
+Or use the setup_pix2tex.bat file for automatic setup!`;
             } else {
                 errorMsg += `Error: ${error.message}`;
             }
             
             this.showError(errorMsg);
+            this.setupSection.style.display = 'block';
+            this.serverConfig.style.display = 'block';
         }
     }
 
-    toggleMathpixSection() {
-        const isVisible = this.mathpixSection.style.display !== 'none';
-        this.mathpixSection.style.display = isVisible ? 'none' : 'block';
+    updateProgress(progress, status) {
+        this.progressFill.style.width = `${progress}%`;
+        this.progressText.textContent = `${status}: ${Math.round(progress)}%`;
+    }
+
+    showProgress() {
+        this.previewSection.style.display = 'none';
+        this.progressSection.style.display = 'block';
+        this.resultSection.style.display = 'none';
         
-        if (!isVisible) {
-            // If showing Mathpix section and API key is provided, try to process with Mathpix
-            const apiKey = this.mathpixApiKey.value.trim();
-            if (apiKey && this.imagePreview.src) {
-                this.procesWithMathpix(apiKey);
+        // Simulate progress for better UX
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            this.updateProgress(progress, 'Processing with pix2tex');
+        }, 200);
+        
+        // Store interval to clear it later
+        this.progressInterval = interval;
+    }
+
+    displayResult(latex, rawText) {
+        // Clear progress interval
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+        
+        this.progressSection.style.display = 'none';
+        this.resultSection.style.display = 'block';
+        this.setupSection.style.display = 'none';
+        
+        this.latexOutput.value = latex;
+        this.mathPreview.textContent = latex;
+        
+        // Show raw processing info if available
+        if (rawText && rawText.trim() && rawText !== latex) {
+            const rawTextElement = document.getElementById('rawText');
+            if (rawTextElement) {
+                rawTextElement.textContent = rawText;
+                this.rawTextSection.style.display = 'block';
             }
+        }
+        
+        this.updatePreview();
+    }
+
+    updatePreview() {
+        const latex = this.latexOutput.value;
+        this.mathPreview.textContent = latex;
+        
+        if (window.MathJax) {
+            MathJax.typesetPromise([this.mathPreview]).catch((err) => {
+                console.log('MathJax rendering error:', err);
+                this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
+            });
         }
     }
 
-    async procesWithMathpix(apiKey) {
-        if (!apiKey) {
-            alert('Please enter your Mathpix API key first.');
-            return;
+    showError(message) {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
         }
+        
+        this.progressSection.style.display = 'none';
+        alert(message);
+    }
 
-        this.showProgress();
-        this.progressText.textContent = 'Processing with Mathpix API...';
-
+    async copyToClipboard() {
         try {
-            // Convert image to base64
-            const base64Image = this.imagePreview.src.split(',')[1];
-            
-            const response = await fetch('https://api.mathpix.com/v3/text', {
-                method: 'POST',
-                headers: {
-                    'app_id': 'trial', // Use trial for demonstration
-                    'app_key': apiKey,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    src: `data:image/jpeg;base64,${base64Image}`,
-                    formats: ['text', 'latex_styled'],
-                    data_options: {
-                        include_asciimath: true,
-                        include_latex: true
-                    }
-                })
-            });
+            await navigator.clipboard.writeText(this.latexOutput.value);
+            const originalText = this.copyBtn.textContent;
+            this.copyBtn.textContent = 'Copied!';
+            this.copyBtn.classList.add('success');
+            setTimeout(() => {
+                this.copyBtn.textContent = originalText;
+                this.copyBtn.classList.remove('success');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            // Fallback for older browsers
+            this.latexOutput.select();
+            document.execCommand('copy');
+            alert('LaTeX code copied to clipboard!');
+        }
+    }
 
-            const result = await response.json();
-            
-            if (result.latex_styled) {
-                this.displayResult(result.latex_styled, result.text);
-            } else if (result.text) {
-                this.displayResult(this.convertToLaTeX(result.text), result.text);
-            } else {
-                throw new Error('No result from Mathpix API');
-            }
-        } catch (error) {
-            console.error('Mathpix API Error:', error);
-            this.showError('Mathpix API failed. Check your API key and try again, or use the free OCR option.');
+    resetInterface() {
+        this.previewSection.style.display = 'none';
+        this.progressSection.style.display = 'none';
+        this.resultSection.style.display = 'none';
+        this.rawTextSection.style.display = 'none';
+        this.serverConfig.style.display = 'none';
+        this.setupSection.style.display = 'block';
+        this.fileInput.value = '';
+        
+        // Clear any progress intervals
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
         }
     }
 }
