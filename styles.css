@@ -342,6 +342,14 @@ footer a:hover {
     resize: vertical;
 }
 
+.pix2tex-section {
+    background: #e8f5e8;
+    border: 1px solid #c3e6c3;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
 .mathpix-section {
     background: #e3f2fd;
     border: 1px solid #bbdefb;

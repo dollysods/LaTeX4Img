@@ -25,6 +25,9 @@ class LaTeXOCR {
         this.tryMathpixBtn = document.getElementById('tryMathpixBtn');
         this.mathpixSection = document.getElementById('mathpixSection');
         this.mathpixApiKey = document.getElementById('mathpixApiKey');
+        this.tryPix2texBtn = document.getElementById('tryPix2texBtn');
+        this.pix2texSection = document.getElementById('pix2texSection');
+        this.pix2texUrl = document.getElementById('pix2texUrl');
     }
 
     bindEvents() {
@@ -36,6 +39,7 @@ class LaTeXOCR {
         this.copyBtn.addEventListener('click', this.copyToClipboard.bind(this));
         this.newImageBtn.addEventListener('click', this.resetInterface.bind(this));
         this.updatePreviewBtn.addEventListener('click', this.updatePreview.bind(this));
+        this.tryPix2texBtn.addEventListener('click', this.processWithPix2tex.bind(this));
         this.tryMathpixBtn.addEventListener('click', this.toggleMathpixSection.bind(this));
         
         // Allow editing of LaTeX output
@@ -338,6 +342,7 @@ class LaTeXOCR {
         this.progressSection.style.display = 'none';
         this.resultSection.style.display = 'none';
         this.rawTextSection.style.display = 'none';
+        this.pix2texSection.style.display = 'none';
         this.mathpixSection.style.display = 'none';
         this.fileInput.value = '';
     }
@@ -351,6 +356,70 @@ class LaTeXOCR {
                 console.log('MathJax rendering error:', err);
                 this.mathPreview.innerHTML = `<p>Preview unavailable. LaTeX code: <code>${latex}</code></p>`;
             });
+        }
+    }
+
+    async processWithPix2tex() {
+        if (!this.imagePreview.src) {
+            alert('Please upload an image first.');
+            return;
+        }
+
+        // Toggle pix2tex section visibility
+        const isVisible = this.pix2texSection.style.display !== 'none';
+        this.pix2texSection.style.display = isVisible ? 'none' : 'block';
+        
+        if (isVisible) return; // Just hiding section, don't process
+
+        const serverUrl = this.pix2texUrl.value.trim() || 'http://localhost:8502';
+        
+        this.showProgress();
+        this.progressText.textContent = 'Processing with pix2tex (better accuracy)...';
+
+        try {
+            // Convert image to base64 without data URL prefix
+            const base64Image = this.imagePreview.src.split(',')[1];
+            
+            const response = await fetch(`${serverUrl}/predict`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: base64Image
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.latex || result.prediction) {
+                const latex = result.latex || result.prediction;
+                this.displayResult(latex, 'Processed with pix2tex');
+            } else {
+                throw new Error('No LaTeX result from pix2tex server');
+            }
+        } catch (error) {
+            console.error('pix2tex API Error:', error);
+            let errorMsg = 'pix2tex server not available. ';
+            
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMsg += `
+                
+Setup pix2tex server:
+1. Install: pip install "pix2tex[gui]"
+2. Run: python -m pix2tex.api.run
+3. Server should start at http://localhost:8502
+
+Then try again!`;
+            } else {
+                errorMsg += `Error: ${error.message}`;
+            }
+            
+            this.showError(errorMsg);
         }
     }
 

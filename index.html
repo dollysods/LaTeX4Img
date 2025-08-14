@@ -59,18 +59,32 @@
                     <div class="button-group">
                         <button id="copyBtn" class="btn btn-secondary">Copy LaTeX</button>
                         <button id="updatePreviewBtn" class="btn btn-secondary">Update Preview</button>
-                        <button id="tryMathpixBtn" class="btn btn-primary">Try Mathpix API</button>
+                        <button id="tryPix2texBtn" class="btn btn-primary">Try pix2tex (Better OCR)</button>
+                        <button id="tryMathpixBtn" class="btn btn-secondary">Try Mathpix API</button>
                     </div>
                 </div>
                 
                 <h3>Preview:</h3>
                 <div class="math-preview" id="mathPreview"></div>
                 
+                <div class="pix2tex-section" id="pix2texSection" style="display: none;">
+                    <h3>pix2tex API (Free, Better Accuracy):</h3>
+                    <div class="api-input">
+                        <input type="text" id="pix2texUrl" placeholder="pix2tex server URL (e.g., http://localhost:8502)" value="http://localhost:8502" />
+                        <p class="api-info">
+                            <strong>Setup Instructions:</strong><br>
+                            1. Install: <code>pip install "pix2tex[gui]"</code><br>
+                            2. Run server: <code>python -m pix2tex.api.run</code><br>
+                            3. Click the button above to use the better OCR!
+                        </p>
+                    </div>
+                </div>
+
                 <div class="mathpix-section" id="mathpixSection" style="display: none;">
-                    <h3>Mathpix API (Better Accuracy):</h3>
+                    <h3>Mathpix API (Premium):</h3>
                     <div class="api-input">
                         <input type="text" id="mathpixApiKey" placeholder="Enter your Mathpix API key (optional)" />
-                        <p class="api-info">Get a free API key at <a href="https://mathpix.com/" target="_blank">mathpix.com</a> for better mathematical OCR accuracy.</p>
+                        <p class="api-info">Get a paid API key at <a href="https://mathpix.com/" target="_blank">mathpix.com</a> for premium mathematical OCR accuracy.</p>
                     </div>
                 </div>
                 
